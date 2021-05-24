@@ -1,7 +1,7 @@
-# Hello
+# EnergyPlus APIs Paper
 
-This repo holds the source, build rules, and resources, for a ground heat transfer paper.
+This repo holds the source, build rules, and resources, for an E+ APIs paper
 
-# Build Status [![Build Status](https://travis-ci.org/Myoldmopar/GroundHeatFlowsPaper.svg?branch=master)](https://travis-ci.org/Myoldmopar/GroundHeatFlowsPaper)
+# Build [![Build Status](https://img.shields.io/github/workflow/status/Myoldmopar/Paper-APIs/Build%20Paper/main)](https://github.com/Myoldmopar/Paper-APIs/actions)
 
-All commits are built by [Travis CI](https://travis-ci.org).  The current status of the master branch is shown by the badge above.  To generate a pdf, just create a tag on the [Releases Page](https://github.com/Myoldmopar/GroundHeatFlowsPaper/releases).  A build is currently taking on the order of 80 seconds since the build system must download and install TeX.  Once complete, a pdf will be posted to the release...if it is successful. 
+All commits are built by [Github Actions](https://github.com/Myoldmopar/Paper-APIs/actions).  Each successful commit will result in an artifact being uploaded to the commit holding the paper PDF.
