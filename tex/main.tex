@@ -38,15 +38,15 @@
 \date{\today}
 
 \begin{document}
- 
- \maketitle
- 
- \section{Abstract}
+  
+ \begin{abstract}
 Admirable goals for energy efficiency and grid interactivity require a deeper understanding of the interactions between buildings and the electric grid.  Whole-building energy simulation has been used for decades to answer some of the relevant research questions, and over time, the questions have evolved to become more complicated and complex.  The questions of today regarding grid-interactive efficient buildings require incredibly detailed calculations that can be deployed in broad, rapid ways. For two decades, the program building energy simulation engine “EnergyPlus” has been used by thousands of engineers, architects and designers to perform building energy analysis. While it has been effective, answering today’s questions requires new capabilities that don’t just add more physics to the model, but open the door for a broad user base to add their own detailed modeling capabilities in a very straightforward way.  In this paper, new workflows are enabled around EnergyPlus by exposing EnergyPlus functionality through a new API, and allowing EnergyPlus to call out to user-defined Python code.
 
 \hl{This is part of a two paper submission related to the EnergyPlus API.  In this paper, the API is described and justified, while in the second companion paper, applications of this API are exercised with advanced control strategies.}
+ \end{abstract}
 
-
+ \maketitle
+ 
  \section{Background}
 
 The simulation of building physics has been around for many decades, with countless variations in accuracy and flexibility.  In the 1990s, the United States Department of Energy set out to create a state of the art flagship simulation engine, which was ultimately named EnergyPlus and released around the turn of the century.  Since that time, EnergyPlus has evolved in many ways, some very major, with Table~\ref{table:background:events} capturing some of the major changes to the tool.  Here is a dummy citation \citep{Lee2013}.
