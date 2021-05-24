@@ -15,4 +15,5 @@ jobs:
       - name: Upload Paper
         uses: actions/upload-artifact@v2
         with:
+          name: paper
           path: tex/main.pdf
