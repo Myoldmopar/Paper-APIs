@@ -2,8 +2,8 @@
 	all
 all:
 	$(MAKE) -C data 
-	$(MAKE) -C tex
 	$(MAKE) -C resources
+	$(MAKE) -C tex
 
 pdf:
 	$(MAKE) all
