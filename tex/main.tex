@@ -126,7 +126,7 @@ The runtime API category provides methods to hook into a running simulation.  Wh
 The data exchange API provides the crucial piece, a way to exchange data with a running simulation.  Clients will call into EnergyPlus and request a handle (ID) for a variable, meter, or actuator.  When inside a user-defined callback function, calculations can be performed, and values inside the simulation can be updated using these actuator handles.  The simulation will continue using the updated actuator values.  This is the same pattern as with the current EMS system, but allows clients to do this from other languages beyond the custom EMS runtime language written directly in the input file.
 
   \subsection{Use Cases}
-The three different categories of API have been described: functional, runtime and data exchange.  The two “interface modes” have been described: executing EnergyPlus and allowing the tool to execute user-defined Python code, as well as accessing EnergyPlus from an outside caller.  The first mode is inline with the traditional approach of running EnergyPlus.  In the second mode EnergyPlus becomes more of a piece of a larger workflow.  The client will use a separate tool which will link with the EnergyPlus library and make calls into that.  These calls do not need to start a simulation, as they could simply access the functional API in order to perform calculations.  In many cases, however, these uses could do more than that, as they could access the runtime API and register a user-defined function to be called back at specific points.  Within these callbacks, the client could then utilize the data exchange API to read and write simulation state data.  Figure ABCD provides a visualization of the different approaches.
+The three different categories of API have been described: functional, runtime and data exchange.  The two “interface modes” have been described: executing EnergyPlus and allowing the tool to execute user-defined Python code, as well as accessing EnergyPlus from an outside caller.  The first mode is inline with the traditional approach of running EnergyPlus.  In the second mode EnergyPlus becomes more of a piece of a larger workflow.  The client will use a separate tool which will link with the EnergyPlus library and make calls into that.  These calls do not need to start a simulation, as they could simply access the functional API in order to perform calculations.  In many cases, however, these uses could do more than that, as they could access the runtime API and register a user-defined function to be called back at specific points.  Within these callbacks, the client could then utilize the data exchange API to read and write simulation state data.  Figure~\ref{figure:api:uses:workflows} provides a visualization of the different approaches.
 
 \begin{figure}
 \begin{center}
@@ -143,7 +143,7 @@ The traditional approach will still be the primary calling method for most simul
   \subsection{C API Design}
 The details of actually making internal function calls available to clients outside of the compilation unit are not fully described here, as calling into application programming interfaces is standard practice (CITE).  Creating an API that is useful requires careful planning of the functions and classes.  Documenting and conveying the design to clients is equally important as the purpose is to make an interface accessible for users.  In this section, the core C API is described.
 
-EnergyPlus is written in the C++ programming language (CITATION?).  Exposing a C++ API is possible, but exposing a C API results in a more accessible API for more programming languages, primarily Python.  With the C API layer in place, a Python layer is easily built on top of it for accessing the API.  With the C and Python APIs in place, clients can write C++, C, or Python code that can access EnergyPlus functionality for performing runtime control, data exchange, and functional calculation calls.  In the case of C++ or C, the client code must be compiled and dynamically linked to the EnergyPlus library.  In the case of Python, the EnergyPlus python API layer actually handles the linking process when constructed.  (There could be a diagram from this paragraph)
+EnergyPlus is written in the C++ programming language \cite{Stroustrup1995}.  Exposing a C++ API is possible, but exposing a C API results in a more accessible API for more programming languages, primarily Python.  With the C API layer in place, a Python layer is easily built on top of it for accessing the API.  With the C and Python APIs in place, clients can write C++, C, or Python code that can access EnergyPlus functionality for performing runtime control, data exchange, and functional calculation calls.  In the case of C++ or C, the client code must be compiled and dynamically linked to the EnergyPlus library.  In the case of Python, the EnergyPlus python API layer actually handles the linking process when constructed.  (There could be a diagram from this paragraph)
 
 There are some design guidelines followed when laying out the API.  The actual function names described here should not be considered as official documentation, as the API is subject to change in public versions of EnergyPlus.  Users should access EnergyPlus documentation, examples, and header files to get official API documentation.  However, the important guidelines followed are described here.
 
@@ -217,7 +217,7 @@ int main(int argc, const char * argv[]) {
 \end{lstlisting}
 
   \subsection{Python API Design}
-The addition of a C API brings EnergyPlus out of the dark from being a closed off simulation engine to become an interactive library.  This C API alone opens the door for many new applications of EnergyPlus. However, the accessibility and usability of this enhancement can be expanded into a massive set of new possibilities by making the API accessible through the Python programming language and ecosystem.  Adding a Python API enables clients to generate script based workflows utilizing EnergyPlus as well as a wealth of packages and libraries available in Python repositories online.
+The addition of a C API brings EnergyPlus out of the dark from being a closed off simulation engine to become an interactive library.  This C API alone opens the door for many new applications of EnergyPlus. However, the accessibility and usability of this enhancement can be expanded into a massive set of new possibilities by making the API accessible through the Python programming language and ecosystem \cite{Rossum}.  Adding a Python API enables clients to generate script based workflows utilizing EnergyPlus as well as a wealth of packages and libraries available in Python repositories online.
 
 The EnergyPlus Python API layer is written in pure Python and communicates with EnergyPlus through the now established C API layer.  These capabilities are built-in to the Python standard library, and as such the lower-level details of accessing the C API are concealed from users.  For users consuming the Python API layer, the experience is akin to using any other pure Python package.
 
@@ -287,9 +287,25 @@ The full process to utilize the Python Plugin system consists of the following p
  \item Declare the plugin in the simulation input file, specifying the Python module name, the class name, and adding any search paths required to find the Python script
 \end{itemize}
 
-(A graphic will definitely help in this section)
+Graphics:
 
- \section*{Conclusions}
+\begin{figure}
+\begin{center}
+\label{figure:plugins:plugin_workflow_cropped}
+\includegraphics[width=0.7\columnwidth]{images-generated/plugin_workflow_cropped.png}
+\caption{Plugin Workflow Details}
+\end{center}
+\end{figure}
+
+\begin{figure}
+\begin{center}
+\label{figure:plugins:python_ems}
+\includegraphics[width=\columnwidth]{images/python_ems.png}
+\caption{Python EMS Capabilities}
+\end{center}
+\end{figure}
+
+ \section{Conclusions}
 While the EnergyPlus codebase was made fuly open source years ago, the simulation engine code has been exceptionally difficult for clients to modify and interact with, especially as a library.  There is a wide range of possibilities for clients once the code is made accessible from outside tools.  These possibilities include:
 
 \begin{itemize}
@@ -303,7 +319,7 @@ Frequent concerns/requests when respect to including Python as a dependence are 
 
 \begin{itemize}
  \item A Python interpreter library along with the Python standard library will be packaged for each supported EnergyPlus platform, and installed as a part of the EnergyPlus program.  This Python package will not interfere with any other system installed versions, and this ensures that a client will not have to install Python separately.
- \item Installing third party packages into a Python configuration is generally straightforward on modern systems when the configuration includes a tool such as Pip (Reverse Acronym: Pip Installs Packages).  A complication arises when the desired package includes “native” binary code, which is different for each platform and must be installed more carefully.  Future plans include putting a version of Pip into the EnergyPlus install to allow inserting packages into the EnergyPlus Python structure, however at the time of writing this has not been completed.
+ \item Installing third party packages into a Python configuration is generally straightforward on modern systems when the configuration includes a tool such as Pip (Recursive Acronym: Pip Installs Packages).  A complication arises when the desired package includes “native” binary code, which is different for each platform and must be installed more carefully.  Future plans include putting a version of Pip into the EnergyPlus install to allow inserting packages into the EnergyPlus Python structure, however at the time of writing this has not been completed.
 \end{itemize}
 
  \bibliographystyle{plainnat}
