@@ -1,8 +1,8 @@
 .PHONY:
 	all
 all:
-	$(MAKE) -C data 
-	$(MAKE) -C resources
+	# $(MAKE) -C data 
+	# $(MAKE) -C resources
 	$(MAKE) -C tex
 
 pdf:
