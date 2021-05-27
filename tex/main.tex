@@ -39,15 +39,24 @@
 
 \begin{document}
   
- \begin{abstract}
-Ambitious goals for energy efficiency and grid interactivity require a deeper understanding of the interactions between buildings and the electric grid.  Whole-building energy simulation has been used for decades to answer relevant research building energy usage questions, and over time those questions have evolved with increasing complexity.  For two decades, the program building energy simulation engine EnergyPlus has been used by thousands of engineers, architects and designers to perform building energy analysis.  To meet the demands of the current energy climate, designing and studying today's grid-interactive efficient buildings must include complex, and sometimes custom, calculations that can be deployed rapidly.  New energy modeling are not just related to adding more physics to the model, but also about opening the door for a broad user base to add their own detailed modeling capabilities in a very straightforward manner.  In this paper, new workflows are enabled around EnergyPlus by exposing EnergyPlus functionality through a new API, and allowing EnergyPlus to call out to user-defined Python code.  A follow-up paper is in process that will describe applications that are enabled by the new API capabilities.
- \end{abstract}
+\begin{abstract}
+Ambitious goals for energy efficiency and grid interactivity require a deeper understanding of the interactions between buildings and the electric grid.  
+Whole-building energy simulation has been used for decades to answer relevant research building energy usage questions, and over time those questions have evolved with increasing complexity.  
+For two decades, the program building energy simulation engine EnergyPlus has been used by thousands of engineers, architects and designers to perform building energy analysis.  
+To meet the demands of the current energy climate, designing and studying today's grid-interactive efficient buildings must include complex, and sometimes custom, calculations that can be deployed rapidly.  
+New energy modeling are not just related to adding more physics to the model, but also about opening the door for a broad user base to add their own detailed modeling capabilities in a very straightforward manner.  
+In this paper, new workflows are enabled around EnergyPlus by exposing EnergyPlus functionality through a new API, and allowing EnergyPlus to call out to user-defined Python code.  
+A follow-up paper is in process that will describe applications that are enabled by the new API capabilities.
+\end{abstract}
 
- \maketitle
+\maketitle
  
- \section{Background}
+\section{Background}
 
-The simulation of building physics has been around for many decades, with countless variations in accuracy and flexibility.  In the 1990s, the United States Department of Energy set out to create a state of the art flagship simulation engine, which was ultimately named EnergyPlus and released around the turn of the century \cite{Crawley2001}.  Since that time, EnergyPlus has evolved in many ways, some very major, with Table~\ref{table:background:events} capturing some of the major changes to the tool.
+The history of simulation of building physics, including peak load prediction, and energy simulation, has been around for decades, \cite{Mao2018} with countless variations in accuracy and flexibility.  
+In the 1990s, the United States Department of Energy created a state of the art flagship simulation engine, which was ultimately named EnergyPlus and released around the turn of the millennium \cite{Crawley2001}.  
+Since that time, EnergyPlus has evolved in many ways.   
+Some of the more prominent changes are listed in Table~\ref{table:background:events}.
 
 \begin{table}[h!]
 \begin{center}
@@ -57,7 +66,7 @@ The simulation of building physics has been around for many decades, with countl
 Year         & Event                               \\ 
 \midrule
 1999 or 2000 & Initial release of EnergyPlus       \\
-2009         & User defined controls (EMS)         \\
+2007         & User defined controls (EMS)         \\
 2011?        & External interface for cosimulation \\
 2014         & Conversion from Fortran to C++      \\ 
 \bottomrule
@@ -66,37 +75,64 @@ Year         & Event                               \\
 \end{center}
 \end{table}
 
-Each of the events listed in Table~\ref{table:background:events} were critical in improving the usability and/or accuracy of the tool, thus playing a role in establishing the current state of the program.  Recent releases of the tool have achieved around 40,000 direct downloads, plus many thousand more uses as it is packaged with software development kits like OpenStudio as well as with other commercial graphical interfaces. 
+Recent releases of the tool have achieved around 40,000 direct downloads, plus many thousand more uses as it is packaged with software development kits like OpenStudio and with other commercial graphical interfaces.  
+Each of the events listed in Table~\ref{table:background:events} were critical in improving the usability and/or accuracy of the tool, thus playing a role in establishing the current state of the program.  
 
-  \subsection{User Defined Controls}
-The Energy Management System (EMS) in EnergyPlus allows users to read simulation data, and actuate simulation controls--according to their own custom logic--at a selected frequency within a running simulation.  This was ultimately extended to not only allow users to write custom control logic, but also to define custom component models entirely.  This was a major advancement that allowed users to fill in the gaps of the built-in EnergyPlus controls and component models, to perform simulations that involved niche, obscure, or cutting edge technologies and controls that are not pre-compiled with the EnergyPlus release.  These have been exercised by developers. \cite{Dutton2012, Jones2013, Sardoueinasab2019, Sardoueinasab2020} At the time of implementation, EnergyPlus was still in the adolescent phase of development, and was viewed primarily as a research-oriented tool.  The addition of a user defined language supported the research interest for simulating novel control strategies and technologies, but also ensured that companies could simulate their as-built technologies without having to contribute control logic back into the original Fortran codebase.  This spurred interest in the tool from new industry partners and was critical for moving EnergyPlus towards achieving widespread adoption.  As capabilities built around the Energy Management System evolved, the name became less representative of the true power.  With the ability to actuate thousands of controls and settings in a running simulation, the system became more of a generic plugin system which allows simulation of user-specified components and controls.  However, with all that power, the EMS code was still restricted in a few primary ways:
+\subsection{User Defined Controls}
+  
+For nearly EnergyPlus' entire life, it has existed as an opaque widget which accepted input data in terms of an input file, ran a series of calculations, integrating over time, and produced a set of output files.  
+There was only one way that a user could alter the calculation methodology to evaluate custom controls or capture new physics, and that was by modifying the Fortran source code and rebuilding the tool itself.  
+In 2007, a new capability was added to EnergyPlus in the form of a user-defined runtime language \cite{Ellis2007}.  
+This system, called the Energy Management System (EMS) in EnergyPlus allowed users to read simulation data, and actuate simulation controls according to their own custom logic at dynamic calling points during a simulation.  
+This was ultimately extended to not only allow users to write custom control logic, but also to define custom component models entirely.  
+This was a major advancement that allowed users to fill in the gaps of the built-in EnergyPlus controls and component models, to perform simulations that involved niche, obscure, or cutting edge technologies and controls that are not pre-compiled with the EnergyPlus release.  
+These have been exercised by developers \cite{Dutton2012, Jones2013, Sardoueinasab2019, Sardoueinasab2020}.  
+
+At the time of implementation, EnergyPlus was still in the adolescent phase of development, and was viewed primarily as a research-oriented tool.  
+The addition of a user defined language supported the research interest for simulating novel control strategies and technologies, but also ensured that companies could simulate their as-built technologies without having to contribute control logic back into the original Fortran codebase.  
+This spurred interest in the tool from new industry partners and was critical for moving EnergyPlus towards achieving widespread adoption.  
+As capabilities evolved, and with the ability to actuate thousands of controls and settings in a running simulation, the system became more of a generic plugin system.  
+However, with all that power, the EMS code was still restricted in a few primary ways:
+
 \begin{itemize}
-  \item The language -- EnergyPlus Runtime Language is a completely custom language with no support system outside of EnergyPlus itself
-  \item Language features -- features were limited to a small set of language constructs and data types to avoid having to maintain a complex language
-  \item Functionality implementation -- user-defined functionality must be written directly into the context of the input file syntax, IDF, which makes the resulting code clumsy to manage
-  \item Program debugging -- the resulting program involves parsing through stack evaluation files which easily enter into the gigabytes of data, with no easy way to limit outputs to specific times/variables
+  \item The language, ``EnergyPlus Runtime Language'' is a completely custom language with no support system outside of the EnergyPlus ecosystem
+  \item The language included only limited data types and control flow capabilities 
+  \item User-defined functionality is written directly into the context of the input file syntax, IDF, which makes the resulting code difficult to manage
+  \item Debugging a simulation that includes user-defined content involves parsing through stack evaluation files which easily enter into the gigabytes of data, with no easy way to limit outputs to specific times/variables
 \end{itemize}
 
 Even with these limitations, the Energy Management System was an impressive feature and helped EnergyPlus expand further into research and development, but also into commercial opportunities.
 
-  \subsection{External Interface}
-The external interface feature of EnergyPlus was an attempt to create a form of API to allow other tools to communicate with EnergyPlus.  The specifics of this system are available in literature \cite{Nouidui2014}, but it can be summarized as a socket-based approach to allowing tools to communicate with a running simulation (VERIFY THIS).  This system was used by the BCVTB \cite{Pang2011} and was the first attempt at exposing the core of EnergyPlus to other tools.  The real problem of this is that wiring up new capabilities requires expertise in multiple domains: computer science and software development to set up these tools and programs, but then also the mechanical and building science expertise to make engineering judgments during model development and results evaluation.  This greatly limited the number of users who could make use of this development.
+\subsection{External Interface}
+The external interface feature of EnergyPlus was the first API to allow other tools to communicate with EnergyPlus.  
+The specifics of this system are available in literature \cite{Nouidui2014}, but it can be summarized as a socket-based approach, allowing tools to communicate with a running simulation (VERIFY THIS).  
+This system was used by the Building Controls Virtual Test Bed \cite{Pang2011} and was the first attempt at exposing the core of EnergyPlus to external tools.  
+External interface was utilized in research applications, however wiring up new capabilities required expertise in multiple domains: computer science and software development to set up these tools and programs, as well as mechanical and building science expertise to make engineering judgments during model development and results evaluation.  
+This limited the number of users who could make use of this development.
 
-  \subsection{Conversion from Fortran to C++}
-At the birth of EnergyPlus, Fortran 95 provided far and above the most state of the art programming capabilities for a numerical simulation tool.  Capabilities such as dynamically allocating user defined derived types allowed the program to be computationally efficient while benefiting from the memory management of the Fortran language and runtime.  Fortran was the right choice for creating the simulation tool, and persisted as the best choice of language for well over a decade. In that time, the C++ language gained popularity while Fortran fell behind.  The ability to do commonplace modern coding practices in Fortran justifies a journal paper \cite{Oezturan2015}.  While the C++ language is missing some features such as built-in multi-dimensional array support, the developer base and community surrounding it opens up access to many modern libraries and scientific packages.  With that situation, the conversion from Fortran to C++ was performed for two main reasons:
+\subsection{Conversion from Fortran to C++}
+At the birth of EnergyPlus, modern Fortran standards provided the most state of the art programming capabilities for a numerical simulation tool \cite{Adams1997}.
+Capabilities such as dynamically allocating user defined derived types allowed the program to be modular and the program took advantage of the memory management and optimization capabilities of the Fortran language and tools.  
+Fortran was the best choice for creating the simulation tool, and persisted as the best choice of language for well over a decade. 
+In that time, however, the C++ language gained worldwide popularity while Fortran popularity declined and the interval between official standards lengthened, thus causing modern enhancements to be left behind.
+To date, the ability to do otherwise commonplace modern coding practices in Fortran justifies a journal article \cite{Oezturan2015}.  
+While the C++ language is missing some Fortran features such as built-in multi-dimensional array support, the massive developer base and community surrounding C++ allows access to many modern libraries and scientific packages.  
+The conversion from Fortran to C++ was thus performed for two main reasons:
 \begin{itemize}
-  \item improving the access to new developers, including gaining commercial support, was more achievable with the codebase in C++, and 
+  \item improving the access to developers, including gaining commercial support, was more achievable with the codebase in C++, and 
   \item moving to C++ lowers the bar to provide many new capabilities such as allowing code reuse through a C/C++ API.  Although Fortran does technically have objects and classes, and can expose them through a programming interface, it is widely accepted that the class structure in C++ is set up to be much more amenable to this situation than Fortran, and the C++ community has substantially more resources for these patterns
 \end{itemize}
 
-  \subsection{EnergyPlus API History}
+\subsection{EnergyPlus API History}
+(HERE)
+
 Software tools incorporate variables and functions, and in many cases, these can be reused by clients by exposing this data through an interface layer.  Desktop applications, mobile apps, and web applications alike commonly expose an Application Programming Interface (API).  The design of APIs has evolved over time, but the benefits are well-known, responsibilities can be kept isolated to each program or server, and programs and applications can then easily be tied together to create larger workflows, reusing each program’s features.
 
 External tools that utilize EnergyPlus have provided interface layers to the simulation. \cite{Campos2020}  These were not generally related to interacting with a running simulation, but rather related to developing input values in a parametric fashion or managing multiple simulation runs.
 
 Official EnergyPlus releases did not expose simulation functionality through an API layer while the codebase was in Fortran.  Once the code was in C++, the build and packaging process was modified to include an EnergyPlus library with the release.  This library exposed only basic functionality for executing a simulation, plus allowing a caller to register functions to be called back periodically during a simulation.  This was demonstrated as a way for an interface, possibly a graphical interface, to provide updates during a simulation.  This was the state of the code leading up to this current work.
 
- \section{The EnergyPlus API} 
+\section{The EnergyPlus API} 
 Developing an API on a scientific library is not necessarily common, but also not unprecedented \cite{Mohanan2018}.  In this work, the capabilities of EnergyPlus are extended by implementing changes on two different interfaces.  The first interface allows users to call into EnergyPlus and read sensors and write actuator data, make use of exposed calculation functionality, and run simulations, all from an outside caller.  This capability is referred to as “The EnergyPlus API”.  The second interface is adding a Python interpreter to the EnergyPlus, allowing users to execute user-defined Python code from typical EnergyPlus workflows.  The second case is similar to the traditional EMS code except instead of requiring the logic to be in the input file, and the boundary conditions to be known up front, the Python code can call out to other tools and libraries to achieve the goals and perform calculations dynamically.  This capability is referred to as “Python EMS”.  Python EMS utilizes the EnergyPlus API interface to read sensors and write actuators at runtime.  The remainder of this section describes the scope, design, capabilities, and limitations of the EnergyPlus API itself. Note, however, that the API is central to the capabilities of the Python EMS system, described in the following section.
  
   \subsection{Scope and Purpose}
