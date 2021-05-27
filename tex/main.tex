@@ -1,5 +1,6 @@
-\documentclass[5p]{elsarticle}
+\documentclass[5p, authoryear]{elsarticle}
 
+\usepackage{hyperref}
 \usepackage{amsmath}
 \usepackage{booktabs}
 \usepackage{graphicx}
@@ -53,8 +54,8 @@ A follow-up paper is in process that will describe applications that are enabled
  
 \section{Background}
 
-The history of simulation of building physics, including peak load prediction, and energy simulation, has been around for decades, \cite{Mao2018} with countless variations in accuracy and flexibility.  
-In the 1990s, the United States Department of Energy created a state of the art flagship simulation engine, which was ultimately named EnergyPlus and released around the turn of the millennium \cite{Crawley2001}.  
+The history of simulation of building physics, including peak load prediction, and energy simulation, has been around for decades, \citep{Mao2018} with countless variations in accuracy and flexibility.  
+In the 1990s, the United States Department of Energy created a state of the art flagship simulation engine, which was ultimately named EnergyPlus and released around the turn of the millennium \citep{Crawley2001}.  
 Since that time, EnergyPlus has evolved in many ways.   
 Some of the more prominent changes are listed in Table~\ref{table:background:events}.
 
@@ -82,11 +83,11 @@ Each of the events listed in Table~\ref{table:background:events} were critical i
   
 For nearly EnergyPlus' entire life, it has existed as an opaque widget which accepted input data in terms of an input file, ran a series of calculations, integrating over time, and produced a set of output files.  
 There was only one way that a user could alter the calculation methodology to evaluate custom controls or capture new physics, and that was by modifying the Fortran source code and rebuilding the tool itself.  
-In 2007, a new capability was added to EnergyPlus in the form of a user-defined runtime language \cite{Ellis2007}.  
+In 2007, a new capability was added to EnergyPlus in the form of a user-defined runtime language \citep{Ellis2007}.  
 This system, called the Energy Management System (EMS) in EnergyPlus allowed users to read simulation data, and actuate simulation controls according to their own custom logic at dynamic calling points during a simulation.  
 This was ultimately extended to not only allow users to write custom control logic, but also to define custom component models entirely.  
 This was a major advancement that allowed users to fill in the gaps of the built-in EnergyPlus controls and component models, to perform simulations that involved niche, obscure, or cutting edge technologies and controls that are not pre-compiled with the EnergyPlus release.  
-These have been exercised by developers \cite{Dutton2012, Jones2013, Sardoueinasab2019, Sardoueinasab2020}.  
+These have been exercised by developers \citep{Dutton2012, Jones2013, Sardoueinasab2019, Sardoueinasab2020}.  
 
 At the time of implementation, EnergyPlus was still in the adolescent phase of development, and was viewed primarily as a research-oriented tool.  
 The addition of a user defined language supported the research interest for simulating novel control strategies and technologies, but also ensured that companies could simulate their as-built technologies without having to contribute control logic back into the original Fortran codebase.  
@@ -105,17 +106,17 @@ Even with these limitations, the Energy Management System was an impressive feat
 
 \subsection{External Interface}
 The external interface feature of EnergyPlus was the first API to allow other tools to communicate with EnergyPlus.  
-The specifics of this system are available in literature \cite{Nouidui2014}, but it can be summarized as a socket-based approach, allowing tools to communicate with a running simulation (VERIFY THIS).  
-This system was used by the Building Controls Virtual Test Bed \cite{Pang2011} and was the first attempt at exposing the core of EnergyPlus to external tools.  
+The specifics of this system are available in literature \citep{Nouidui2014}, but it can be summarized as a socket-based approach, allowing tools to communicate with a running simulation (VERIFY THIS).  
+This system was used by the Building Controls Virtual Test Bed \citep{Pang2011} and was the first attempt at exposing the core of EnergyPlus to external tools.  
 External interface was utilized in research applications, however wiring up new capabilities required expertise in multiple domains: computer science and software development to set up these tools and programs, as well as mechanical and building science expertise to make engineering judgments during model development and results evaluation.  
 This limited the number of users who could make use of this development.
 
 \subsection{Conversion from Fortran to C++}
-At the birth of EnergyPlus, modern Fortran standards provided the most state of the art programming capabilities for a numerical simulation tool \cite{Adams1997}.
+At the birth of EnergyPlus, modern Fortran standards provided the most state of the art programming capabilities for a numerical simulation tool \citep{Adams1997}.
 Capabilities such as dynamically allocating user defined derived types allowed the program to be modular and the program took advantage of the memory management and optimization capabilities of the Fortran language and tools.  
 Fortran was the best choice for creating the simulation tool, and persisted as the best choice of language for well over a decade. 
 In that time, however, the C++ language gained worldwide popularity while Fortran popularity declined and the interval between official standards lengthened, thus causing modern enhancements to be left behind.
-To date, the ability to do otherwise commonplace modern coding practices in Fortran justifies a journal article \cite{Oezturan2015}.  
+To date, the ability to do otherwise commonplace modern coding practices in Fortran justifies a journal article \citep{Oezturan2015}.  
 While the C++ language is missing some Fortran features such as built-in multi-dimensional array support, the massive developer base and community surrounding C++ allows access to many modern libraries and scientific packages.  
 The conversion from Fortran to C++ was thus performed for two main reasons:
 \begin{itemize}
@@ -124,16 +125,42 @@ The conversion from Fortran to C++ was thus performed for two main reasons:
 \end{itemize}
 
 \subsection{EnergyPlus API History}
-(HERE)
+Software programs and libraries utilize variables and functions in order to perform their required duties.
+While most functionality from standalone programs is kept internal, programs can evolve into more accessible libraries.
+As functions, structures, and variables are exposed through an interface, they can be reused by clients.
+Desktop applications, mobile apps, and web applications commonly expose an Application Programming Interface (API).
+The design of APIs has evolved over time, but there are obvious benefits, including:
+\begin{itemize}
+ \item individual libraries and programs maintain formal boundaries, with isolated responsibilities, and
+ \item individual programs and applications can be tied together to create larger workflows, reusing each program’s features.
+\end{itemize}
 
-Software tools incorporate variables and functions, and in many cases, these can be reused by clients by exposing this data through an interface layer.  Desktop applications, mobile apps, and web applications alike commonly expose an Application Programming Interface (API).  The design of APIs has evolved over time, but the benefits are well-known, responsibilities can be kept isolated to each program or server, and programs and applications can then easily be tied together to create larger workflows, reusing each program’s features.
+There have been external tools developed that build on EnergyPlus and provide a variety of capabilities to interface with the simulation. \citep{Campos2020, Guglielmetti2011}
+The primary applications of these external applications have not been related to interacting with a running simulation, because that capability was not exposed via EnergyPlus.  
+These applications instead were related to developing input values for a simulation, or a group of simulations, and then managing individual simulation processes, such as to run many simulations concurrently.
 
-External tools that utilize EnergyPlus have provided interface layers to the simulation. \cite{Campos2020}  These were not generally related to interacting with a running simulation, but rather related to developing input values in a parametric fashion or managing multiple simulation runs.
-
-Official EnergyPlus releases did not expose simulation functionality through an API layer while the codebase was in Fortran.  Once the code was in C++, the build and packaging process was modified to include an EnergyPlus library with the release.  This library exposed only basic functionality for executing a simulation, plus allowing a caller to register functions to be called back periodically during a simulation.  This was demonstrated as a way for an interface, possibly a graphical interface, to provide updates during a simulation.  This was the state of the code leading up to this current work.
+EnergyPlus releases did not officially expose simulation functionality through an API layer while the codebase was in Fortran.  
+Once the code was translated to C++, the build and packaging process was modified to include an intermediate step of creating a shared library for EnergyPlus.
+This shared library included a minimal functionality for executing a simulation, plus allowing a calling program to register functions to be called back periodically during a simulation.
+The actual EnergyPlus program that is executed by users is a consumer of this shared library, creating a thin application layer on top of the simulation function call.
+While there were examples of graphical interfaces that would call EnergyPlus as a library, nearly every tool simply executed EnergyPlus as a standalone program.
+This status would remain leading up to this current work, when the current work, a new formal API for EnergyPlus, would enable novel workflows.
 
 \section{The EnergyPlus API} 
-Developing an API on a scientific library is not necessarily common, but also not unprecedented \cite{Mohanan2018}.  In this work, the capabilities of EnergyPlus are extended by implementing changes on two different interfaces.  The first interface allows users to call into EnergyPlus and read sensors and write actuator data, make use of exposed calculation functionality, and run simulations, all from an outside caller.  This capability is referred to as “The EnergyPlus API”.  The second interface is adding a Python interpreter to the EnergyPlus, allowing users to execute user-defined Python code from typical EnergyPlus workflows.  The second case is similar to the traditional EMS code except instead of requiring the logic to be in the input file, and the boundary conditions to be known up front, the Python code can call out to other tools and libraries to achieve the goals and perform calculations dynamically.  This capability is referred to as “Python EMS”.  Python EMS utilizes the EnergyPlus API interface to read sensors and write actuators at runtime.  The remainder of this section describes the scope, design, capabilities, and limitations of the EnergyPlus API itself. Note, however, that the API is central to the capabilities of the Python EMS system, described in the following section.
+Developing an API on a scientific library may not be exactly common, but also not unprecedented \citep{Mohanan2018}.  
+In the current work, the capabilities of EnergyPlus are extended through implementation of two distinct interface approaches.
+The first interface allows users to call into EnergyPlus from an outside calling script or program, and read sensors and write actuator data, make use of exposed calculation functionality, and run simulations.
+This capability is referred to as the ``EnergyPlus API''.
+This API is, in effect, what allows access to the internal pieces of EnergyPlus, both at runtime as well as on demand when a simulation is not running.
+The second interface adds a Python interpreter to the EnergyPlus engine internal capabilities, allowing users to execute user-defined Python code from typical EnergyPlus workflows.  
+This second case is similar to the traditional EMS code except instead of expressing the custom functionality in the input file using the EnergyPlus runtime language, the user defined functionality lives outside the EnergyPlus boundary in a Python script.
+This second workflow is called Python EMS.
+In both cases, there is a key benefit: boundary conditions and input data does not need to be fully declared and known ahead of the simulation.
+In traditional EMS and non-API workflows, the entire set of input data, along with the logic, had to be declared ahead of the simulation running.
+With the new API and Python EMS capabilities, the boundary conditions can be dynamically evaluated from any outside source.
+In both cases, the Python code can call out to other tools and libraries to achieve the goals and perform calculations dynamically.
+The EnergyPlus API allows access to the simulation, so while the Python EMS code is executing, it can leverage the API to communicate back to the running simulation that started executed the code.
+The remainder of this section describes the scope, design, capabilities, and limitations of the EnergyPlus API itself, with further information on the Python EMS workflow in the following section.
  
   \subsection{Scope and Purpose}
 Building simulation tools evolve to handle changes in state of the art technology and creativity in the applications emerging from controls designers.  In addition, building simulation tools should evolve to maximize usefulness in the hands of the users.  In modern computer applications, it is increasingly common to allow access to the internal functions and classes through an API layer, and to allow special operations to occur through the use of plugins.  The purpose of this work is to expose EnergyPlus internal functionality.  The functionality is exposed through three different API categories, but this is merely an organizational detail, as the APIs from all categories are exposed/accessed in the same way.  The different categories are summarized in Table~\ref{table:api:uses:classes}.
@@ -177,7 +204,7 @@ The traditional approach will still be the primary calling method for most simul
   \subsection{C API Design}
 The details of actually making internal function calls available to clients outside of the compilation unit are not fully described here, as calling into application programming interfaces is standard practice (CITE).  Creating an API that is useful requires careful planning of the functions and classes.  Documenting and conveying the design to clients is equally important as the purpose is to make an interface accessible for users.  In this section, the core C API is described.
 
-EnergyPlus is written in the C++ programming language \cite{Stroustrup1995}.  Exposing a C++ API is possible, but exposing a C API results in a more accessible API for more programming languages, primarily Python.  With the C API layer in place, a Python layer is easily built on top of it for accessing the API.  With the C and Python APIs in place, clients can write C++, C, or Python code that can access EnergyPlus functionality for performing runtime control, data exchange, and functional calculation calls.  In the case of C++ or C, the client code must be compiled and dynamically linked to the EnergyPlus library.  In the case of Python, the EnergyPlus python API layer actually handles the linking process when constructed.  (There could be a diagram from this paragraph)
+EnergyPlus is written in the C++ programming language \citep{Stroustrup1995}.  Exposing a C++ API is possible, but exposing a C API results in a more accessible API for more programming languages, primarily Python.  With the C API layer in place, a Python layer is easily built on top of it for accessing the API.  With the C and Python APIs in place, clients can write C++, C, or Python code that can access EnergyPlus functionality for performing runtime control, data exchange, and functional calculation calls.  In the case of C++ or C, the client code must be compiled and dynamically linked to the EnergyPlus library.  In the case of Python, the EnergyPlus python API layer actually handles the linking process when constructed.  (There could be a diagram from this paragraph)
 
 There are some design guidelines followed when laying out the API.  The actual function names described here should not be considered as official documentation, as the API is subject to change in public versions of EnergyPlus.  Users should access EnergyPlus documentation, examples, and header files to get official API documentation.  However, the important guidelines followed are described here.
 
@@ -251,7 +278,7 @@ int main(int argc, const char * argv[]) {
 \end{lstlisting}
 
   \subsection{Python API Design}
-The addition of a C API brings EnergyPlus out of the dark from being a closed off simulation engine to become an interactive library.  This C API alone opens the door for many new applications of EnergyPlus. However, the accessibility and usability of this enhancement can be expanded into a massive set of new possibilities by making the API accessible through the Python programming language and ecosystem \cite{Rossum}.  Adding a Python API enables clients to generate script based workflows utilizing EnergyPlus as well as a wealth of packages and libraries available in Python repositories online.
+The addition of a C API brings EnergyPlus out of the dark from being a closed off simulation engine to become an interactive library.  This C API alone opens the door for many new applications of EnergyPlus. However, the accessibility and usability of this enhancement can be expanded into a massive set of new possibilities by making the API accessible through the Python programming language and ecosystem \citep{Rossum}.  Adding a Python API enables clients to generate script based workflows utilizing EnergyPlus as well as a wealth of packages and libraries available in Python repositories online.
 
 The EnergyPlus Python API layer is written in pure Python and communicates with EnergyPlus through the now established C API layer.  These capabilities are built-in to the Python standard library, and as such the lower-level details of accessing the C API are concealed from users.  For users consuming the Python API layer, the experience is akin to using any other pure Python package.
 
