@@ -167,7 +167,7 @@ Building simulation programs, like other tools, should evolve to maximize useful
 This evolution can be justified for a variety reasons, including to support changes in state of the art technology, allow novel control algorithms, and provide improved interoperability and user-experience.
 In modern computer applications, it is increasingly common to allow access to the internal functions and classes through an API layer, and to allow special operations to occur through the use of plugins.
 The purpose of this current work is to expose EnergyPlus internal functionality.
-The functionality is exposed through a single API divided into categories purely for organization, which are summarized in Table~\ref{table:api:uses:classes}.
+The functionality is exposed through a single API divided into categories purely for organization, which are summarized in Table~\ref{table:api:purpose:classes}.
 
 \begin{table}
 \begin{center}
@@ -182,7 +182,7 @@ Runtime      & Hook into a running simulation at specific calling points, as wel
 DataExchange & Access internal data for reading (sensors) and writing (actuators) \\ 
 \bottomrule
 \end{tabular}
-\label{table:api:uses:classes}
+\label{table:api:purpose:classes}
 \end{center}
 \end{table}
 
@@ -218,8 +218,26 @@ The client function can do anything you can expect to do with a programming lang
 \end{itemize}
 Regardless of what the client function does externally, the primary use case for a user defined function is to then interact with the running simulation instance, the details of which are described in the following data exchange API discussion.
 
-The primary goal of the API effort is to provide a way to get 
-The data exchange API provides the crucial piece, a way to exchange data with a running simulation.  Clients will call into EnergyPlus and request a handle (ID) for a variable, meter, or actuator.  When inside a user-defined callback function, calculations can be performed, and values inside the simulation can be updated using these actuator handles.  The simulation will continue using the updated actuator values.  This is the same pattern as with the current EMS system, but allows clients to do this from other languages beyond the custom EMS runtime language written directly in the input file.
+The primary goal of the API effort is to provide the means to read and write data inside a running EnergyPlus simulation.
+The state API category provides functionality for creating the instance of EnergyPlus, the functional API exposes some internal functions to the client, and the runtime API allows for connecting an external function to be called back by EnergyPlus at specific points. 
+The final category of API, the data exchange API, provides the final required piece, which is the means to exchange data with the running simulation.
+The data exchange process includes reading the current value of any possible output variable from the specific running simulation, and overriding control parameters using actuators.
+To exchange this data, clients call into EnergyPlus from a callback function previously registered with EnergyPlus.
+The client calls functions that request handles to variables, meters, and actuators by name.
+These handles are then used in all subsequent function calls into the running simulation when reading or writing values.
+The key aspect of this system is that the client can then combine an incredible amount of data to make decisions, as shown in Figure~\ref{figure:api:purpose:callback_collection}.
+
+\begin{figure}
+\begin{center}
+\label{figure:api:purpose:callback_collection}
+\rule{2cm}{2cm}
+%\includegraphics[width=\columnwidth]{images/api_workflows.png}
+\caption{Visualization of Using Many Data Sources with the EnergyPlus API}
+\end{center}
+\end{figure}
+
+When the callback function returns to EnergyPlus, the simulation engine will continue running using any updated actuator values.
+This is the same pattern as with the current EMS system, but allows clients to go well beyond the boundary of the input-file-based language limitations.
 
   \subsection{Use Cases}
 The three different categories of API have been described: functional, runtime and data exchange.  The two “interface modes” have been described: executing EnergyPlus and allowing the tool to execute user-defined Python code, as well as accessing EnergyPlus from an outside caller.  The first mode is inline with the traditional approach of running EnergyPlus.  In the second mode EnergyPlus becomes more of a piece of a larger workflow.  The client will use a separate tool which will link with the EnergyPlus library and make calls into that.  These calls do not need to start a simulation, as they could simply access the functional API in order to perform calculations.  In many cases, however, these uses could do more than that, as they could access the runtime API and register a user-defined function to be called back at specific points.  Within these callbacks, the client could then utilize the data exchange API to read and write simulation state data.  Figure~\ref{figure:api:uses:workflows} provides a visualization of the different approaches.
