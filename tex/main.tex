@@ -147,8 +147,8 @@ While there were examples of graphical interfaces that would call EnergyPlus as 
 This status would remain leading up to this current work, when the current work, a new formal API for EnergyPlus, would enable novel workflows.
 
 \section{The EnergyPlus API} 
-Developing an API on a scientific library may not be exactly common, but also not unprecedented \citep{Mohanan2018}.  
-In the current work, the capabilities of EnergyPlus are extended through implementation of two distinct interface approaches.
+Developing an API layer on a scientific computing library is not unprecedented \citep{Mohanan2018, Gratiy2018, Lotz2020}.
+In the current work, the capabilities of EnergyPlus are extended through an implementation of two distinct interface approaches.
 The first interface allows users to call into EnergyPlus from an outside calling script or program, and read sensors and write actuator data, make use of exposed calculation functionality, and run simulations.
 This capability is referred to as the ``EnergyPlus API''.
 This API is, in effect, what allows access to the internal pieces of EnergyPlus, both at runtime as well as on demand when a simulation is not running.
@@ -163,26 +163,60 @@ The EnergyPlus API allows access to the simulation, so while the Python EMS code
 The remainder of this section describes the scope, design, capabilities, and limitations of the EnergyPlus API itself, with further information on the Python EMS workflow in the following section.
  
   \subsection{Scope and Purpose}
-Building simulation tools evolve to handle changes in state of the art technology and creativity in the applications emerging from controls designers.  In addition, building simulation tools should evolve to maximize usefulness in the hands of the users.  In modern computer applications, it is increasingly common to allow access to the internal functions and classes through an API layer, and to allow special operations to occur through the use of plugins.  The purpose of this work is to expose EnergyPlus internal functionality.  The functionality is exposed through three different API categories, but this is merely an organizational detail, as the APIs from all categories are exposed/accessed in the same way.  The different categories are summarized in Table~\ref{table:api:uses:classes}.
+Building simulation programs, like other tools, should evolve to maximize usefulness in the hands of the users.
+This evolution can be justified for a variety reasons, including to support changes in state of the art technology, allow novel control algorithms, and provide improved interoperability and user-experience.
+In modern computer applications, it is increasingly common to allow access to the internal functions and classes through an API layer, and to allow special operations to occur through the use of plugins.
+The purpose of this current work is to expose EnergyPlus internal functionality.
+The functionality is exposed through a single API divided into categories purely for organization, which are summarized in Table~\ref{table:api:uses:classes}.
 
-\begin{table*}
+\begin{table}
 \begin{center}
-\begin{tabular}{@{}p{1.25in}p{2.5in}p{2.5in}@{}}
+\caption{Summary of EnergyPlus API Categories}
+\begin{tabular}{lp{2.25in}}
 \toprule
-API Type     & Summary/Notes & Example Use Case                                                                                                                                  \\ 
+Category     & Purpose \\
 \midrule
-Functional   & Access calculations and functionality in EnergyPlus without requiring a running simulation & Perform fluid property calculations and geometric zone calculations by making calls into the EnergyPlus library \\
-Runtime      & Allow hooking into a running simulation at specific calling points, as well as kicking off the simulation itself. & Register a function to be called every timestep by EnergyPlus, then execute the simulation, all through function calls in the EnergyPlus library. \\
-DataExchange & Allow access to internal data for reading (sensors) and writing (actuators) & Get current zone temperatures or actuate current fan speed during a running simulation.                                                           \\ 
+State        & Access an instance of EnergyPlus, used in most API operations \\
+Functional   & Access calculations and functionality without requiring a running simulation \\
+Runtime      & Hook into a running simulation at specific calling points, as well as initiating the simulation itself \\
+DataExchange & Access internal data for reading (sensors) and writing (actuators) \\ 
 \bottomrule
 \end{tabular}
 \label{table:api:uses:classes}
 \end{center}
-\end{table*}
+\end{table}
 
-The functional API category is intended to provide access to static calculation methods and structures in EnergyPlus.  This is data which can be accessed without requiring the user to first initiate a simulation.  Internally, EnergyPlus uses functions and classes to organize and calculate everything it needs to run a simulation.  This includes geometric calculations, thermophysical property lookups, solar calculations, physical component models, and many other things.  Some of these require a simulation to be running to calculate transient properties and setup other time series data.  But many of these calculations can be performed by simply providing the necessary boundary condition data.  For fluid property or psychrometric calculations, a user can call to calculate enthalpy, moisture properties, specific heats, using appropriate input values for the functions.  For geometric zone calculations, a user will need to provide vertex values to layout the geometry of a surface or zone, then calculations can be performed on the surface.  In the initial prototype of this API, the fluid property, psychrometric, and refrigerant calculations are exposed through the API, but this API will be extended over time to allow for additional capabilities.
+The state API category provides access to an ``instance'' of EnergyPlus.
+This instance is needed for nearly all API functionality, as even during simple API calls, EnergyPlus may need to instantiate data behind the scenes.
+This API category provides functions to create a new state, clear a state, and destroy a state.
+From a user perspective, creating a state through the API is similar to creating an EnergyPlus instance, much like a client could expect to do with other libraries.
 
-The runtime API category provides methods to hook into a running simulation.  When EnergyPlus is running as a standalone executable, there is no way to “interrupt” a simulation at a specific time from outside EnergyPlus.  This new runtime API allows a client to write their own functions which can be “called back” from EnergyPlus at specifically registered points in the simulation.  Once a function is registered, the client can initiate the simulation, EnergyPlus will begin running and make calls into this client-defined function as configured during the run.  The possible calling points are the same as with the current EMS system, and include points of widely varying frequency, from once per run environment, to being called deep in the HVAC iteration loop.
+The functional API category provides access to static calculation methods and structures in EnergyPlus.  
+These represent aspects of EnergyPlus that can be accessed without requiring the client to initiate a simulation.
+Internally, EnergyPlus uses functions and classes to organize and calculate the physics and bookkeeping operations in a simulation.
+The operations include geometric calculations, thermodynamic property evaluation, solar calculations, component models such as coils and boilers, among many other things.
+Some of these operations require an actively running simulation to calculate transient properties and setup time series data.
+Some, however, can be performed by providing a reasonable amount of initialization and boundary condition data.
+The functional API category is intended to capture these static operations and expose them to clients of EnergyPlus.
+For fluid property and psychrometric calculations, a client may utilize the API to calculate enthalpy, moisture properties, specific heats, and more, using relevant input values for the functions.
+For geometric zone calculations, which is not yet completed, a user will need to provide vertex values to layout the geometry of a surface or zone, then calculations can be performed on the surface or zone.
+The current status of the API is that it includes refrigerant property calculations, fluid property calculations, and psychrometric calculations.
+Future enhancements to the functional API will include the aforementioned geometric calculations, as well as the ability to ``instantiate'' a component model such as a pump, boiler, or coil, and evaluate outlet conditions given required inlet, boundary, and potentially initial or historical conditions.
+
+In contrast to the static functionality provided by the functional API, the runtime API provides the means to attach to a running simulation.
+Consider the traditional way to run EnergyPlus, where a simulation is executed with all the required input data predefined, and no way to interact interact with the simulation boundary data.
+With the runtime API, a client creates functions, and registers those functions with an EnergyPlus instance, and initiates a simulation.
+The functions are registered for specific calling points so that the client functions are called back at specific points in the simulation.
+The available calling points are the same as with the built-in EMS system, representing a wide range of frequencies, from once per run environment to the depths of the iteration structure.
+After registering the callback function, the client starts the simulation, and as the simulation is running it will call back to the client function.
+The client function can do anything you can expect to do with a programming language, including:
+\begin{itemize}
+ \item Access files and directories on the file system
+ \item Access databases, both local and over a network
+ \item Access web servers which can provide dynamic data
+ \item Evaluate machine learning algorithms
+\end{itemize}
+Regardless of what the client function does externally, the primary use case for a user defined function is to then interact with the running simulation instance, the details of which are described in the following data exchange API discussion.
 
 The data exchange API provides the crucial piece, a way to exchange data with a running simulation.  Clients will call into EnergyPlus and request a handle (ID) for a variable, meter, or actuator.  When inside a user-defined callback function, calculations can be performed, and values inside the simulation can be updated using these actuator handles.  The simulation will continue using the updated actuator values.  This is the same pattern as with the current EMS system, but allows clients to do this from other languages beyond the custom EMS runtime language written directly in the input file.
 
