@@ -218,6 +218,7 @@ The client function can do anything you can expect to do with a programming lang
 \end{itemize}
 Regardless of what the client function does externally, the primary use case for a user defined function is to then interact with the running simulation instance, the details of which are described in the following data exchange API discussion.
 
+The primary goal of the API effort is to provide a way to get 
 The data exchange API provides the crucial piece, a way to exchange data with a running simulation.  Clients will call into EnergyPlus and request a handle (ID) for a variable, meter, or actuator.  When inside a user-defined callback function, calculations can be performed, and values inside the simulation can be updated using these actuator handles.  The simulation will continue using the updated actuator values.  This is the same pattern as with the current EMS system, but allows clients to do this from other languages beyond the custom EMS runtime language written directly in the input file.
 
   \subsection{Use Cases}
