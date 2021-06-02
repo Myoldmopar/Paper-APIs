@@ -162,7 +162,7 @@ In both cases, the Python code can call out to other tools and libraries to achi
 The EnergyPlus API allows access to the simulation, so while the Python EMS code is executing, it can leverage the API to communicate back to the running simulation that started executed the code.
 The remainder of this section describes the scope, design, capabilities, and limitations of the EnergyPlus API itself, with further information on the Python EMS workflow in the following section.
  
-  \subsection{Scope and Purpose}
+\subsection{Scope and Purpose}
 Building simulation programs, like other tools, should evolve to maximize usefulness in the hands of the users.
 This evolution can be justified for a variety reasons, including to support changes in state of the art technology, allow novel control algorithms, and provide improved interoperability and user-experience.
 In modern computer applications, it is increasingly common to allow access to the internal functions and classes through an API layer, and to allow special operations to occur through the use of plugins.
@@ -239,8 +239,19 @@ The key aspect of this system is that the client can then combine an incredible 
 When the callback function returns to EnergyPlus, the simulation engine will continue running using any updated actuator values.
 This is the same pattern as with the current EMS system, but allows clients to go well beyond the boundary of the input-file-based language limitations.
 
-  \subsection{Use Cases}
-The three different categories of API have been described: functional, runtime and data exchange.  The two “interface modes” have been described: executing EnergyPlus and allowing the tool to execute user-defined Python code, as well as accessing EnergyPlus from an outside caller.  The first mode is inline with the traditional approach of running EnergyPlus.  In the second mode EnergyPlus becomes more of a piece of a larger workflow.  The client will use a separate tool which will link with the EnergyPlus library and make calls into that.  These calls do not need to start a simulation, as they could simply access the functional API in order to perform calculations.  In many cases, however, these uses could do more than that, as they could access the runtime API and register a user-defined function to be called back at specific points.  Within these callbacks, the client could then utilize the data exchange API to read and write simulation state data.  Figure~\ref{figure:api:uses:workflows} provides a visualization of the different approaches.
+\subsection{Use Cases}
+The different categories of API have been described: state, functional, runtime and data exchange.
+The two interface ``modes'' have been described:
+\begin{description}
+\item[Python-based EMS] The mode where EnergyPlus is executed by a client as a standalone tool that is then directed to execute user-defined Python code using an embedded interpreter library
+\item[EnergyPlus, the Library] The mode where EnergyPlus is called as a function from external code, either C or Python.
+\end{description}
+The first mode, Python EMS, is expected to be familiar to users of traditional EnergyPlus workflows.
+In the second mode, EnergyPlus is expected to become more of single cog in a broader machine, or workflow.
+The client creates a calling script that links with the EnergyPlus library to make calls into the simulation engine using any or all of the categories of API.
+The calls do not need to start a simulation, as they might only access the functional API in order to perform calculations.
+In many cases, however, clients will go beyond that, and access the runtime API to register a user-defined function to be called back at specific points, then utilize the data exchange API to read and write simulation state data.
+Figure~\ref{figure:api:uses:workflows} provides a visualization of the two different modes.
 
 \begin{figure}
 \begin{center}
@@ -250,9 +261,19 @@ The three different categories of API have been described: functional, runtime a
 \end{center}
 \end{figure}
 
-In the library approach, many new possible calling structures are possible, but they generally follow the same pattern: a client registers functions as callbacks using the runtime API, kicks off a simulation run with the runtime API, and when those registered functions are called back, they can then call back into the library to read and write data using the data exchange API, and perform calculations with the functional API.
+The EnergyPlus as a library approach opens new potential calling structures, although they generally follow the same pattern: 
+\begin{quote}
+A client registers functions as callbacks using the runtime API, kicks off a simulation run with the runtime API, and when those registered functions are called back, they can then call back into the library to read and write data using the data exchange API, and perform calculations with the functional API.
+\end{quote}
 
-The traditional approach will still be the primary calling method for most simulation use cases, as it does not require writing any code to access functionality inside the library.  However, the possibilities opened up by the new library approach are widespread.  Being able to perform data exchange with the simulation from an outside caller unlocks the possibility of connecting with multiple tools at once, keeping tools in lockstep, interfacing with hardware, interfacing with specialized control languages, providing data visualization while a simulation is running, providing simulation feedback while a simulation is running, and more.  The new library approach requires only minimal code, as described in the design section below, but opens the door for major changes in capability.
+Regardless of whether EnergyPlus is called using the traditional approach or calling the tool as a library, the possibilities opened up by this API effort are extensive.
+The ability to perform data exchange between a running simulation and an outside world, just by writing a few lines of code, rapidly unlocks the ability to do many things, including:
+\begin{itemize}
+ \item connecting with multiple tools at once, potentially keeping tools in lockstep to perform cosimulation,
+ \item interfacing with hardware, or virtualized hardware,
+ \item interfacing with specialized control languages and frameworks,
+ \item providing live data visualization while a simulation is running.
+\end{itemize}
 
   \subsection{C API Design}
 The details of actually making internal function calls available to clients outside of the compilation unit are not fully described here, as calling into application programming interfaces is standard practice (CITE).  Creating an API that is useful requires careful planning of the functions and classes.  Documenting and conveying the design to clients is equally important as the purpose is to make an interface accessible for users.  In this section, the core C API is described.
